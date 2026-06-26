@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Examen de Lenguaje - Daleska</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    background: #eef1f5;
+    margin: 0;
+    padding: 20px 10px 60px;
+    color: #222;
+  }
+  .header {
+    max-width: 900px;
+    margin: 0 auto 20px;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 22px;
+    margin: 0 0 4px;
+    color: #1a3a5c;
+  }
+  .header p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+  }
+  .question-wrap {
+    max-width: 900px;
+    margin: 0 auto 18px;
+    position: relative;
+  }
+  .question-wrap img {
+    width: 100%;
+    display: block;
+    border-radius: 4px;
+  }
+  .multi-tag {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #ff9800;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 10px;
+  }
+  .checkbox-overlay {
+    position: absolute;
+    cursor: pointer;
+    background: white;
+    border: 1.5px solid #555;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .checkbox-overlay input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+  }
+  .checkbox-overlay.checked {
+    background: #1565c0;
+  }
+  .checkbox-overlay.checked::after {
+    content: "✓";
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+  }
+  .result-icon {
+    position: absolute;
+    font-size: 15px;
+    font-weight: bold;
+    pointer-events: none;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .result-icon.correct { color: white; background: #2e7d32; }
+  .result-icon.wrong { color: white; background: #c62828; }
+  .footer-bar {
+    max-width: 900px;
+    margin: 30px auto 0;
+    text-align: center;
+  }
+  #submitBtn {
+    background: #1565c0;
+    color: white;
+    border: none;
+    padding: 14px 36px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  #submitBtn:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+  }
+  #resetBtn {
+    background: white;
+    color: #1565c0;
+    border: 2px solid #1565c0;
+    padding: 12px 32px;
+    font-size: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 12px;
+  }
+  #scoreBox {
+    max-width: 900px;
+    margin: 0 auto 20px;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: none;
+  }
+  #scoreBox.show { display: block; }
+  #scoreBox .big {
+    font-size: 32px;
+    font-weight: bold;
+    color: #1565c0;
+  }
+  .progress {
+    max-width: 900px;
+    margin: 0 auto 16px;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📖 Examen de práctica - Lenguaje y Literatura</h1>
+  <p>Toca el cuadrito junto a la respuesta que creas correcta. Algunas preguntas tienen más de una respuesta correcta ⚠️</p>
+</div>
+
+<div class="progress" id="progress">0 de 7 respondidas</div>
+
+<div id="quiz"></div>
+
+<div id="scoreBox">
+  <div class="big" id="scoreText"></div>
+  <div id="scoreMsg" style="margin-top:8px;font-size:15px;color:#555;"></div>
+  <button id="resetBtn" onclick="resetQuiz()">🔄 Intentar de nuevo</button>
+</div>
+
+<div class="footer-bar">
+  <button id="submitBtn" onclick="submitQuiz()" disabled>Revisar respuestas</button>
+</div>
+
+<script>
+const questions = [
+  { id: 1, img: "img/l1.png", correct: [1], multi: false, x: 0.0235, options: [
+      {y: 0.4766}, {y: 0.6345}, {y: 0.7924}
+  ]},
+  { id: 2, img: "img/l2.png", correct: [2], multi: false, x: 0.021, options: [
+      {y: 0.3444}, {y: 0.4302}, {y: 0.519}
+  ]},
+  { id: 3, img: "img/l3.png", correct: [2,3], multi: true, x: 0.0291, options: [
+      {y: 0.473}, {y: 0.594}, {y: 0.715}, {y: 0.836}
+  ]},
+  { id: 4, img: "img/l4.png", correct: [0,1,2], multi: true, x: 0.0235, options: [
+      {y: 0.364}, {y: 0.503}, {y: 0.636}, {y: 0.770}
+  ]},
+  { id: 5, img: "img/l5.png", correct: [1], multi: false, x: 0.0212, options: [
+      {y: 0.419}, {y: 0.556}, {y: 0.689}, {y: 0.821}
+  ]},
+  { id: 6, img: "img/l6.png", correct: [3], multi: false, x: 0.0212, options: [
+      {y: 0.5319}, {y: 0.6434}, {y: 0.751}, {y: 0.8586}
+  ]},
+  { id: 7, img: "img/l7.png", correct: [1], multi: false, x: 0.021, options: [
+      {y: 0.458}, {y: 0.5774}, {y: 0.6969}, {y: 0.8208}
+  ]}
+];
+
+let answers = {};
+let submitted = false;
+
+function buildQuiz() {
+  const quizDiv = document.getElementById('quiz');
+  quizDiv.innerHTML = '';
+  questions.forEach(q => {
+    const wrap = document.createElement('div');
+    wrap.className = 'question-wrap';
+    wrap.id = 'qwrap-' + q.id;
+
+    const img = document.createElement('img');
+    img.src = q.img;
+    img.alt = 'Pregunta ' + q.id;
+    img.onload = function() { positionCheckboxes(q, wrap, img); };
+    wrap.appendChild(img);
+
+    if (q.multi) {
+      const tag = document.createElement('div');
+      tag.className = 'multi-tag';
+      tag.textContent = '✓✓ Varias respuestas';
+      wrap.appendChild(tag);
+    }
+
+    quizDiv.appendChild(wrap);
+  });
+}
+
+function positionCheckboxes(q, wrap, img) {
+  const renderedWidth = img.clientWidth;
+  const boxSizePx = renderedWidth * 0.018;
+  q.options.forEach((pos, oi) => {
+    const cb = document.createElement('div');
+    cb.className = 'checkbox-overlay';
+    cb.style.left = (q.x * 100) + '%';
+    cb.style.top = (pos.y * 100) + '%';
+    cb.style.width = boxSizePx + 'px';
+    cb.style.height = boxSizePx + 'px';
+    cb.style.transform = 'translate(-50%, -50%)';
+    cb.id = 'cb-' + q.id + '-' + oi;
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.style.width = '100%';
+    input.style.height = '100%';
+    input.onclick = function(e) {
+      e.preventDefault();
+      if (submitted) return;
+      toggleAnswer(q, oi);
+    };
+    cb.appendChild(input);
+    wrap.appendChild(cb);
+  });
+  refreshCheckboxes(q.id);
+}
+
+function toggleAnswer(q, oi) {
+  if (!answers[q.id]) answers[q.id] = [];
+  const arr = answers[q.id];
+  const idx = arr.indexOf(oi);
+
+  if (q.multi) {
+    if (idx >= 0) arr.splice(idx, 1);
+    else arr.push(oi);
+  } else {
+    answers[q.id] = (idx >= 0) ? [] : [oi];
+  }
+  refreshCheckboxes(q.id);
+  updateProgress();
+}
+
+function refreshCheckboxes(qid) {
+  const q = questions.find(x => x.id === qid);
+  const sel = answers[qid] || [];
+  q.options.forEach((pos, oi) => {
+    const box = document.getElementById('cb-' + qid + '-' + oi);
+    const input = box.querySelector('input');
+    const isChecked = sel.includes(oi);
+    input.checked = isChecked;
+    box.classList.toggle('checked', isChecked);
+  });
+}
+
+function updateProgress() {
+  const count = questions.filter(q => answers[q.id] && answers[q.id].length > 0).length;
+  document.getElementById('progress').textContent = count + ' de ' + questions.length + ' respondidas';
+  document.getElementById('submitBtn').disabled = (count < questions.length);
+}
+
+function arraysMatch(a, b) {
+  if (a.length !== b.length) return false;
+  const sa = [...a].sort();
+  const sb = [...b].sort();
+  return sa.every((v, i) => v === sb[i]);
+}
+
+function submitQuiz() {
+  submitted = true;
+  let correct = 0;
+  questions.forEach(q => {
+    const userAns = answers[q.id] || [];
+    const wrap = document.getElementById('qwrap-' + q.id);
+    q.options.forEach((pos, oi) => {
+      const box = document.getElementById('cb-' + q.id + '-' + oi);
+      const input = box.querySelector('input');
+      input.disabled = true;
+      box.style.cursor = 'default';
+    });
+
+    const isCorrect = arraysMatch(userAns, q.correct);
+    if (isCorrect) correct++;
+
+    q.correct.forEach(ci => {
+      markIcon(wrap, q.options[ci], '✓', 'correct');
+    });
+    userAns.forEach(ui => {
+      if (!q.correct.includes(ui)) {
+        markIcon(wrap, q.options[ui], '✗', 'wrong');
+      }
+    });
+  });
+
+  const pct = Math.round((correct / questions.length) * 100);
+  document.getElementById('scoreText').textContent = correct + ' de ' + questions.length + ' correctas (' + pct + '%)';
+  let msg = '';
+  if (pct >= 80) msg = '¡Excelente trabajo! 🎉';
+  else if (pct >= 60) msg = 'Bien, sigue practicando un poco más 💪';
+  else msg = 'Repasemos juntos los temas que faltan 📚';
+  document.getElementById('scoreMsg').textContent = msg;
+  document.getElementById('scoreBox').classList.add('show');
+  document.getElementById('submitBtn').style.display = 'none';
+  window.scrollTo({top: document.getElementById('scoreBox').offsetTop - 20, behavior: 'smooth'});
+}
+
+function markIcon(wrap, pos, symbol, cls) {
+  const icon = document.createElement('div');
+  icon.className = 'result-icon ' + cls;
+  icon.textContent = symbol;
+  icon.style.left = '41%';
+  icon.style.top = (pos.y * 100) + '%';
+  icon.style.transform = 'translateY(-50%)';
+  wrap.appendChild(icon);
+}
+
+function resetQuiz() {
+  answers = {};
+  submitted = false;
+  document.getElementById('scoreBox').classList.remove('show');
+  document.getElementById('submitBtn').style.display = 'inline-block';
+  document.getElementById('submitBtn').disabled = true;
+  buildQuiz();
+  updateProgress();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+buildQuiz();
+</script>
+
+</body>
+</html>
